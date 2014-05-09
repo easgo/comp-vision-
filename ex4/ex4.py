@@ -45,13 +45,16 @@ def main():
     ch = cv2.GaussianBlur(ch, (5, 5), 0)
 #     thresh = cv2.adaptiveThreshold(ch,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,21,0)
     thresh = cv2.threshold(ch, 255/2 + 5, 255, cv2.THRESH_BINARY)[1]
+    thresh_img_3c = cv2.merge([thresh, thresh, thresh])
     
-    markers = np.zeros(s.shape, dtype=np.uint8)
+    markers = np.zeros(s.shape, dtype=np.int32)
     markers_index = 1
     for i in xrange(s.shape[0]):
         for j in xrange(s.shape[1]):
             if thresh[i, j] != 0 and markers[i, j] == 0:
-                mark_neighbors(thresh, markers, i, j, markers_index)
+#                 mark_neighbors(thresh, markers, i, j, markers_index)
+#                 markers[i, j] = markers_index
+                cv2.watershed(thresh_img_3c, markers)
                 markers_index += 1
     
     
