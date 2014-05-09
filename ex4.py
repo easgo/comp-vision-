@@ -18,7 +18,7 @@ def get_neighbours(thresh, indices_list, i, j):
     
     return filter(filter_func, np.concatenate(np.transpose(np.meshgrid(range(i-1, i+2), range(j-1, j+2)))).tolist())
 
-def mark_neighbors(thresh, markers, i, j):
+def mark_neighbors(thresh, markers, i, j, marking_value):
     indices_list_index = 0
     indices_list = [[i, j]]
     
@@ -28,7 +28,7 @@ def mark_neighbors(thresh, markers, i, j):
 #         Add items to the indices list
         neighbors = get_neighbours(thresh, indices_list, index[0], index[1])
         indices_list.extend(neighbors)
-        markers[index[0], index[1]] = 255
+        markers[index[0], index[1]] = marking_value
         indices_list_index += 1
 
 
@@ -47,14 +47,16 @@ def main():
     thresh = cv2.threshold(ch, 255/2 + 5, 255, cv2.THRESH_BINARY)[1]
     
     markers = np.zeros(s.shape, dtype=np.uint8)
-#     markers_index = 1
-#     for i in xrange(s.shape[0]):
-#         for j in xrange(s.shape[1]):
-#
-
-    mark_neighbors(thresh, markers, 76, 220)
+    markers_index = 1
+    for i in xrange(s.shape[0]):
+        for j in xrange(s.shape[1]):
+            if thresh[i, j] != 0 and markers[i, j] == 0:
+                mark_neighbors(thresh, markers, i, j, markers_index)
+                markers_index += 1
     
-    plt.imshow(markers, 'gray')
+    
+    
+    plt.imshow(cv2.equalizeHist(markers), 'gray')
     plt.show()
     
 
