@@ -5,14 +5,13 @@ import os
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
-from __builtin__ import filter
 
-def get_neighbours(thresh, indices_list, i, j):
+def get_neighbours(thresh, markers, i, j):
     dimentions = thresh.shape
     
     def filter_func(index):
-        if index in indices_list or index[0] < 0 or index[0] >= dimentions[0] or index[1] < 0 or index[1] >= dimentions[1] or  \
-            thresh[index[0], index[1]] == 0 or thresh[index[0], index[1]] == 0 or (index[0] == i and index[1] == j) :
+        if markers[index[0], index[1]] != 0 or index[0] < 0 or index[0] >= dimentions[0] or index[1] < 0 or index[1] >= dimentions[1] or  \
+            thresh[index[0], index[1]] == 0 or (index[0] == i and index[1] == j) :
             return False
         return True
     
@@ -21,30 +20,29 @@ def get_neighbours(thresh, indices_list, i, j):
 def mark_neighbors(thresh, markers, i, j, marking_value):
     indices_list_index = 0
     indices_list = [[i, j]]
+    markers[i, j] = marking_value
     
     while indices_list_index < len(indices_list):
         index = indices_list[indices_list_index]
 
 #         Add items to the indices list
-        neighbors = get_neighbours(thresh, indices_list, index[0], index[1])
+        neighbors = get_neighbours(thresh, markers, index[0], index[1])        
         indices_list.extend(neighbors)
-        markers[index[0], index[1]] = marking_value
+        for neighbor in neighbors:
+            markers[neighbor[0], neighbor[1]] = marking_value
+        
         indices_list_index += 1
 
 
 def main():
     
     img = cv2.imread('euler5.jpg', cv2.cv.CV_LOAD_IMAGE_COLOR)    
-#     thresh_img = cv2.threshold(img, 150, 255, cv2.cv.CV_THRESH_BINARY)
-    
-#     img_gray = cv2.equalizeHist(cv2.cvtColor(img, cv2.cv.CV_BGR2GRAY))
     h,s,v = cv2.split(cv2.cvtColor(img, cv2.cv.CV_BGR2HSV))
-#     r,g,b = cv2.split(img)
     ch = s
     ch = cv2.medianBlur(ch,5)
     ch = cv2.GaussianBlur(ch, (5, 5), 0)
-#     thresh = cv2.adaptiveThreshold(ch,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY,21,0)
-    thresh = cv2.threshold(ch, 255/2 + 5, 255, cv2.THRESH_BINARY)[1]
+
+    thresh = cv2.threshold(ch, 255/2 - 10 + 5, 255, cv2.THRESH_BINARY)[1]
     thresh_img_3c = cv2.merge([thresh, thresh, thresh])
     
     markers = np.zeros(s.shape, dtype=np.int32)
@@ -52,14 +50,12 @@ def main():
     for i in xrange(s.shape[0]):
         for j in xrange(s.shape[1]):
             if thresh[i, j] != 0 and markers[i, j] == 0:
-#                 mark_neighbors(thresh, markers, i, j, markers_index)
-#                 markers[i, j] = markers_index
-                cv2.watershed(thresh_img_3c, markers)
+                mark_neighbors(thresh, markers, i, j, markers_index)
                 markers_index += 1
+    mark_neighbors(thresh, markers, 212, 227, markers_index)
+    plt.imshow(cv2.equalizeHist(np.uint8(markers)), 'gray')
+    #plt.imshow(thresh, 'gray')
     
-    
-    
-    plt.imshow(cv2.equalizeHist(markers), 'gray')
     plt.show()
     
 
