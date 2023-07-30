@@ -25,7 +25,7 @@ def mark_neighbors(thresh, markers, i, j, marking_value):
     while indices_list_index < len(indices_list):
         index = indices_list[indices_list_index]
 
-#         Add items to the indices list
+#        Add items to the indices list
         neighbors = get_neighbours(thresh, markers, index[0], index[1])        
         indices_list.extend(neighbors)
         for neighbor in neighbors:
